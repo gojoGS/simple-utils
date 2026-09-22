@@ -18,8 +18,8 @@ struct Cli {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let rows = parse_rows(io::stdin().lock(), cli.delimiter)?;
-    let rendered = render(&rows, &cli.separator);
+    let input = parse(io::stdin().lock(), cli.delimiter)?;
+    let rendered = render(&input, &cli.separator);
 
     io::stdout()
         .lock()
@@ -28,32 +28,57 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-/// Read every line and split it into fields.
+/// Parsed input: the tabulated rows plus the indentation to reapply.
+#[derive(Debug, Default)]
+struct Input {
+    /// One entry per input line; empty for blank lines.
+    rows: Vec<Vec<String>>,
+    /// Leading whitespace of the first non-blank line.
+    indent: String,
+}
+
+/// Read every line, split it into fields, and capture the base indentation.
 ///
 /// `delimiter == None` splits on runs of whitespace; `Some(c)` splits on an
 /// exact character and trims surrounding whitespace from each field.
-fn parse_rows<R: BufRead>(reader: R, delimiter: Option<char>) -> Result<Vec<Vec<String>>> {
+fn parse<R: BufRead>(reader: R, delimiter: Option<char>) -> Result<Input> {
     let mut rows = Vec::new();
+    let mut indent: Option<String> = None;
+
     for line in reader.lines() {
         let line = line.context("failed to read a line from stdin")?;
-        if line.is_empty() {
+
+        if line.trim().is_empty() {
             rows.push(Vec::new());
             continue;
         }
+
+        let lead: String = line.chars().take_while(|c| c.is_whitespace()).collect();
         let fields = match delimiter {
             Some(c) => line.split(c).map(|f| f.trim().to_string()).collect(),
             None => line.split_whitespace().map(str::to_string).collect(),
         };
+
+        if indent.is_none() {
+            indent = Some(lead);
+        }
         rows.push(fields);
     }
-    Ok(rows)
+
+    Ok(Input {
+        rows,
+        indent: indent.unwrap_or_default(),
+    })
 }
 
 /// Pad each column to the width of its widest cell.
 ///
-/// The final field of each row is never padded, so no trailing whitespace is
+/// Every non-blank line is prefixed with the captured indentation, and the
+/// final field of each row is never padded, so no trailing whitespace is
 /// emitted.
-fn render(rows: &[Vec<String>], separator: &str) -> String {
+fn render(input: &Input, separator: &str) -> String {
+    let Input { rows, indent } = input;
+
     let columns = rows.iter().map(Vec::len).max().unwrap_or(0);
 
     let mut widths = vec![0usize; columns];
@@ -65,6 +90,12 @@ fn render(rows: &[Vec<String>], separator: &str) -> String {
 
     let mut out = String::new();
     for row in rows {
+        if row.is_empty() {
+            out.push('\n');
+            continue;
+        }
+
+        out.push_str(indent);
         for (i, field) in row.iter().enumerate() {
             out.push_str(field);
             if i + 1 < row.len() {
@@ -82,62 +113,86 @@ fn render(rows: &[Vec<String>], separator: &str) -> String {
 mod tests {
     use super::*;
 
-    fn rows(input: &str, delimiter: Option<char>) -> Vec<Vec<String>> {
-        parse_rows(input.as_bytes(), delimiter).unwrap()
+    fn run(input: &str, delimiter: Option<char>, separator: &str) -> String {
+        let parsed = parse(input.as_bytes(), delimiter).unwrap();
+        render(&parsed, separator)
     }
 
     #[test]
     fn aligns_columns() {
-        let input = "a bb ccc\ndddd e f\n";
-        let got = render(&rows(input, None), "  ");
+        let got = run("a bb ccc\ndddd e f\n", None, "  ");
         assert_eq!(got, "a     bb  ccc\ndddd  e   f\n");
     }
 
     #[test]
     fn last_column_is_not_padded() {
-        let input = "short verylongvalue\nmuchlonger x\n";
-        let got = render(&rows(input, None), "  ");
+        let got = run("short verylongvalue\nmuchlonger x\n", None, "  ");
         assert_eq!(got, "short       verylongvalue\nmuchlonger  x\n");
     }
 
     #[test]
     fn honours_custom_separator() {
-        let input = "a bb\nccc d\n";
-        let got = render(&rows(input, None), " | ");
+        let got = run("a bb\nccc d\n", None, " | ");
         assert_eq!(got, "a   | bb\nccc | d\n");
     }
 
     #[test]
     fn supports_exact_delimiter() {
-        let input = "a,b\nccc,d\n";
-        let got = render(&rows(input, Some(',')), "  ");
+        let got = run("a,b\nccc,d\n", Some(','), "  ");
         assert_eq!(got, "a    b\nccc  d\n");
     }
 
     #[test]
     fn preserves_blank_lines() {
-        let input = "a b\n\nccc d\n";
-        let got = render(&rows(input, None), "  ");
+        let got = run("a b\n\nccc d\n", None, "  ");
         assert_eq!(got, "a    b\n\nccc  d\n");
     }
 
     #[test]
     fn handles_ragged_rows() {
-        let input = "a b c\nonlyone\nx y\n";
-        let got = render(&rows(input, None), "  ");
+        let got = run("a b c\nonlyone\nx y\n", None, "  ");
         assert_eq!(got, "a        b  c\nonlyone\nx        y\n");
     }
 
     #[test]
     fn counts_unicode_by_char() {
-        let input = "é a\nbbb c\n";
-        let got = render(&rows(input, None), " ");
+        let got = run("é a\nbbb c\n", None, " ");
         assert_eq!(got, "é   a\nbbb c\n");
     }
 
     #[test]
     fn empty_input_is_empty_output() {
-        let got = render(&rows("", None), "  ");
+        let got = run("", None, "  ");
         assert_eq!(got, "");
+    }
+
+    #[test]
+    fn inherits_first_line_indent() {
+        let got = run("    first\n    second\n  third\n", None, "  ");
+        assert_eq!(got, "    first\n    second\n    third\n");
+    }
+
+    #[test]
+    fn indent_applies_before_column_padding() {
+        let got = run("  a bb\n  ccc d\n", None, "  ");
+        assert_eq!(got, "  a    bb\n  ccc  d\n");
+    }
+
+    #[test]
+    fn blank_lines_get_no_indent() {
+        let got = run("  a b\n\n  c d\n", None, "  ");
+        assert_eq!(got, "  a  b\n\n  c  d\n");
+    }
+
+    #[test]
+    fn first_blank_line_does_not_set_indent() {
+        let got = run("\n    a b\n    c d\n", None, "  ");
+        assert_eq!(got, "\n    a  b\n    c  d\n");
+    }
+
+    #[test]
+    fn tabs_are_preserved_as_indent() {
+        let got = run("\ta b\n   c d\n", None, " ");
+        assert_eq!(got, "\ta b\n\tc d\n");
     }
 }
