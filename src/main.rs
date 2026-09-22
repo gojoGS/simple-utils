@@ -11,7 +11,7 @@ struct Cli {
     delimiter: Option<char>,
 
     /// String placed between output columns.
-    #[arg(long, value_name = "STR", default_value = "  ")]
+    #[arg(long, value_name = "STR", default_value = " ")]
     separator: String,
 }
 
