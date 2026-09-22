@@ -1,36 +1,29 @@
 # simple-utils
 
-A small collection of focused command-line utilities written in Rust.
+Small, easy to use shell utilities. Clone it, build it, use it.
 
 Currently ships one tool:
 
 - **`tabulate`** — reads lines from stdin and aligns their fields into vertical
   columns.
 
-## Quick example
+## Getting started
 
-```console
-$ printf 'name age city\nalice 30 NYC\nbob 5 SF\n' | tabulate
-name   age  city
-alice  30   NYC
-bob    5    SF
+```bash
+git clone https://github.com/gojoGS/simple-utils
+cd simple-utils
+cargo install --path .
 ```
 
-Indented input keeps its indentation:
+This places executables in `~/.cargo/bin`. Make sure that directory is on your `PATH`.
 
-```console
-$ printf '    first\n    second\n  third\n' | tabulate
-    first
-    second
-    third
-```
 
-## Where to go next
+## utilities
+- [tabulate](tabulate.md)
 
-- [Installation](installation.md)
-- [Usage](usage.md)
-- [Behaviour](behaviour.md)
-- [Editor integration](editor-integration.md)
+## Info
+
+- [Installation](./installation.md)
 - [Development](development.md)
 
 Source: <https://github.com/gojoGS/simple-utils>

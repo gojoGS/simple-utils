@@ -1,10 +1,15 @@
-# Usage
+# `tabulate` 
 
-```console
-tabulate [OPTIONS]
+## Behavior
+
+Formats input lines into tabular format. Token columns are vertically aligned, padded.
+
+```bash
+$ printf 'name age city\nalice 30 NYC\nbob 5 SF\n' | tabulate
+name   age  city
+alice  30   NYC
+bob    5    SF
 ```
-
-Reads from stdin and writes to stdout, so it is designed to be used as a filter.
 
 ## Options
 
@@ -14,6 +19,7 @@ Reads from stdin and writes to stdout, so it is designed to be used as a filter.
 | `--separator <STR>` | String placed between output columns. Default is two spaces. |
 | `-h, --help` | Print help. |
 | `-V, --version` | Print version. |
+
 
 ## Examples
 
@@ -42,5 +48,24 @@ a   | bb
 ccc | d
 ```
 
-To use it on a selection inside an editor, see
-[Editor integration](editor-integration.md).
+## Neovim and Vim
+
+Tabulate selection:
+
+```vim
+:'<,'>!tabulate
+```
+
+Whole file:
+
+```vim
+:%!tabulate
+```
+
+Mapping for visual mode:
+
+```lua
+vim.keymap.set("v", "<leader>t", ":<C-u>'<,'>!tabulate<CR>", { desc = "Tabulate selection" })
+```
+
+

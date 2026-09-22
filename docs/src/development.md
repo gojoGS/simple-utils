@@ -12,7 +12,7 @@ cargo fmt
 
 ```
 Cargo.toml
-src/main.rs      the tabulate binary
+src/bin/tabulate.rs      the tabulate binary
 docs/            this documentation (mdBook)
 ```
 
