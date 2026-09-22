@@ -1,8 +1,6 @@
-# simple-utils
+# `sutils` Simple utilities
 
 Small, easy to use shell utilities. Clone it, build it, use it.
-
-Currently ships one tool:
 
 - **`tabulate`** — reads lines from stdin and aligns their fields into vertical
   columns.
@@ -18,7 +16,7 @@ cargo install --path .
 This places executables in `~/.cargo/bin`. Make sure that directory is on your `PATH`.
 
 
-## utilities
+## Utilities
 - [tabulate](tabulate.md)
 
 ## Info
