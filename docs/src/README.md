@@ -1,4 +1,4 @@
-# `sutils` Simple utilities
+# `sutils` - Simple utilities
 
 Small, easy to use shell utilities. Clone it, build it, use it.
 
