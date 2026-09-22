@@ -3,6 +3,8 @@
 Small CLI that reads lines from stdin and aligns their fields into vertical
 columns.
 
+Documentation: <https://gojoGS.github.io/simple-utils/>
+
 ```
 $ printf 'name age city\nalice 30 NYC\nbob 5 SF\n' | tabulate
 name   age  city

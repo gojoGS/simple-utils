@@ -1,0 +1,16 @@
+[book]
+title = "simple-utils"
+description = "Small, focused Rust command-line utilities."
+authors = ["gojoGS"]
+language = "en"
+src = "src"
+
+[output.html]
+site-url = "/simple-utils/"
+git-repository-url = "https://github.com/gojoGS/simple-utils"
+edit-url-template = "https://github.com/gojoGS/simple-utils/edit/main/docs/{path}"
+default-theme = "light"
+preferred-dark-theme = "navy"
+
+[output.html.search]
+limit-results = 20
