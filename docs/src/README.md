@@ -23,7 +23,7 @@ This places executables in `~/.cargo/bin`. Make sure that directory is on your `
 
 ## Info
 
-- [Installation](./installation.md)
+- [Installation](installation.md)
 - [Development](development.md)
 
 Source: <https://github.com/gojoGS/simple-utils>

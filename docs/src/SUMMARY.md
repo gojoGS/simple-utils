@@ -1,4 +1,10 @@
 # Summary
 
 - [Introduction](README.md)
-- [Development](development.md)
+- [Installation](installation.md)
+
+# Utilities
+
+- [tabulate](tabulate.md)
+
+[Development](development.md)
